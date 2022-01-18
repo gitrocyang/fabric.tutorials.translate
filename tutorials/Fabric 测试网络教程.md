@@ -1,4 +1,4 @@
-# Fabric 测试网络教程
+# [Fabric 测试网络教程](https://hyperledger-fabric.readthedocs.io/en/release-2.2/test_network.html)
 #区块链 #Fabric #教程
 
 ## 使用Fabric测试网络
@@ -126,7 +126,7 @@ docker ps -a
 
 该样本网络使用一个由订购者组织运营的单节点Raft订购服务。你可以看到在你的机器上运行的订购节点是orderer.example.com。虽然测试网络只使用单节点的订购服务，但生产网络会有多个订购节点，由一个或多个订购者组织运营。不同的订购节点将使用Raft共识算法，就整个网络的交易顺序达成协议。
 
-## 创建一个渠道
+## 创建一个通道
 现在我们的机器上已经运行了 peer 和 orderer 节点，我们可以使用脚本为Org1和Org2之间的交易创建一个Fabric通道。通道是特定网络成员之间的私有通信层。通道只能由被邀请到通道的组织使用，而对网络的其他成员是不可见的。每个通道都有一个独立的区块链账本。被邀请的组织 "加入 "他们的同行到通道中，以存储通道账本并验证通道上的交易。
 
 你可以使用 `network.sh` 脚本在Org1和Org2之间创建一个通道，并将他们的 peers 加入到通道中。运行下面的命令，创建一个默认名称为 `mychannel` 的通道。
@@ -154,13 +154,13 @@ docker ps -a
 ./network.sh createChannel -c channel2
 ```
 
-如果你想在一个步骤中启动网络并创建一个频道，你可以同时使用 `up` 和 `createChannel` 模式。
+如果你想在一个步骤中启动网络并创建一个通道，你可以同时使用 `up` 和 `createChannel` 模式。
 
 ```bash
 ./network.sh up createChannel
 ```
 
-## 在频道上启动一个 chaincode
+## 在通道上启动一个 chaincode
 在你创建了一个通道后，你可以开始使用[智能合约](https://hyperledger-fabric.readthedocs.io/en/release-2.2/smartcontract/smartcontract.html)与通道账本互动。智能合约包含管理区块链账本上资产的业务逻辑。网络成员运行的应用程序可以调用智能合约来创建账本上的资产，以及改变和转移这些资产。应用程序还可以查询智能合约以读取账本上的数据。
 
 为了确保交易的有效性，使用智能合约创建的交易通常需要由多个组织签署，以提交给通道分类账。多重签名是Fabric信任模型的组成部分。要求一个交易有多个签名，可以防止通道上的一个组织篡改其同行的账本，或使用未同意的商业逻辑。为了签署一项交易，每个组织需要在他们的对等体上调用和执行智能合约，然后签署交易的输出。如果输出是一致的，并且已经被足够多的组织签署，那么该交易就可以被提交到分类帐。指定通道上需要执行智能合约的集合组织的政策被称为背书政策，它被作为 chaincode 定义的一部分为每个 chaincode 设置。
@@ -175,8 +175,17 @@ docker ps -a
 
 `deployCC` 子命令将在 `peer0.org1.example.com` 和 `peer0.org2.example.com` 上安装**asset-transfer (basic)** chaincode，然后将chaincode部署在用channel标志指定的channel上（如果没有指定channel，则是mychannel）。如果你是第一次部署chaincode，脚本将安装chaincode的依赖项。你可以使用语言标志-l来安装Go、typescript或javascript版本的chaincode。你可以在 `fabric-samples` 目录下的`asset-transfer-basic` 文件夹中找到asset-transfer（basic）chincode。这个文件夹包含的samples chincode是作为例子提供的，被教程用来突出Fabric的功能。
 
+
+
+**`译者注：此处必须先安装完成golang环境，并建议使用代理：配置命令如下：`**
+
+```bash
+go env -w GO111MODULE=on
+go env -w GOPROXY=https://goproxy.cn,direct
+```
+
 ## 与网络互动
-在你启动测试网络后，你可以使用 `peer` CLI与你的网络互动。`peer` CLI允许你调用已部署的智能合约，更新通道，或从CLI安装和部署新的智能合约。
+在你启动测试网络后，你可以使用 `peer CLI` 与你的网络互动。`peer CLI` 允许你调用已部署的智能合约，更新通道，或从CLI安装和部署新的智能合约。
 
 确保你是在test-network目录下操作的。如果你按照说明[安装样例、可执行文件和Docker 镜像](https://hyperledger-fabric.readthedocs.io/en/release-2.2/install.html)，你可以在 `fabric-samples` 仓库的 `bin` 文件夹中找到 `peer` 的可执行文件。使用以下命令将这些二进制文件添加到你的CLI路径中：
 
@@ -187,7 +196,7 @@ export PATH=${PWD}/../bin:$PATH
 你还需要设置 `FABRIC_CFG_PATH`，使其指向 ` fabric-samples`  资源库中的 `core.yaml` 文件。
 
 ````bash
-export FABRIC_CFG_PATH=$PWD/.../config/
+export FABRIC_CFG_PATH=${PWD}/../config/
 ````
 
 现在你可以设置环境变量，使你能以Org1的身份操作 `peer` 的CLI。
@@ -209,7 +218,7 @@ export CORE_PEER_ADDRESS=localhost:7051
 运行以下命令，用 assets 初始化账本。
 
 ```bash
-peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com --tls --cafile ${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer。 example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C mychannel -n basic --peerAddresses localhost:7051 --tlsRootCertFiles ${PWD}/organizations/peerOrganizations/org1. example.com/peers/peer0.org1.example.com/tls/ca.crt --peerAddresses localhost:9051 --tlsRootCertFiles ${PWD}/organizations/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt -c "{"function: "InitLedger", "Args:[]}'
+peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com --tls --cafile ${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C mychannel -n basic --peerAddresses localhost:7051 --tlsRootCertFiles ${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt --peerAddresses localhost:9051 --tlsRootCertFiles ${PWD}/organizations/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt -c '{"function": "InitLedger", "Args":[]}'
 ```
 
 如果成功，你应该看到与下面类似的输出：
